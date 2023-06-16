@@ -14,3 +14,15 @@
 ## 알고리즘
 * MA-POCA
 * QMIX (추후 추가)
+
+## 폴더 구성
+> Resources
+>   > Agent&Target
+> 
+>   > Bullet
+>
+>   > Model
+
+> Scenes
+
+> Scripts

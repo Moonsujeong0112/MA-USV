@@ -148,7 +148,7 @@ public class USV : Agent
         if (isAbleToAttackTarget = isAttack())
             AddReward(2f / Max_Step);
 
-        if (isCloser())
+        if (isCloser() && IsLocatedToSight())   //가까이가고 시야각 60도 안에 존재할 때
             AddReward(1.5f / Max_Step);
 
         //보상
@@ -282,6 +282,27 @@ public class USV : Agent
         }
 
         return minDistance;
+    }
+
+    /// <summary>
+    /// 보는 방향에 60도안에 적이 있는지
+    /// </summary>
+    /// <returns></returns>
+    public bool IsLocatedToSight()
+    {
+        if (!target)
+            return false;
+
+        Vector3 TargetVector = (target.localPosition - transform.localPosition).normalized; //타겟과 USV간의 위치벡터
+        //Debug.Log("위치벡터 : " + TargetVector);
+        float dot = Vector3.Dot(transform.forward, TargetVector);   //위치벡터와 자신의 방향벡터의 내적
+        //Debug.Log("내적값 : " + dot);
+        float angle = (float)Math.Cos(30*Mathf.Deg2Rad);  //보는 시야각
+        //Debug.Log("cos30도 : " + angle);
+        if (dot < angle)    //보는 시야각보다 큰 곳에 적이 위치할 때
+            return false;
+
+        return true;
     }
 
     /// <summary>
