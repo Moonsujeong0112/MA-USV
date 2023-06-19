@@ -101,6 +101,11 @@ public class USV : Agent
         sensor.AddObservation(targetPositionVector.z);
         //Target이 USV의 발사 ray에 닿았는지(1)
         sensor.AddObservation(isAbleToAttackTarget);
+        //Target의 HP(1)
+        if (target)
+            sensor.AddObservation(target.GetComponent<Target>().HP);
+        else
+            sensor.AddObservation(999);
     }
 
 

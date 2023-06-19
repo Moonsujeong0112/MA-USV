@@ -178,33 +178,22 @@ public class Target : MonoBehaviour
     {
         if (coll.CompareTag("Agent_Bullet"))
         {
-            //Debug.Log($"<color=cyan>***************{name} before attack HP: {HP}***************</color>");
             HP -= 80;
-            //Debug.Log($"<color=cyan>***************{name} after attack HP: {HP}***************</color>");
+
             if (HP <= 0)
             {
-                //Debug.Log($"<color=green>***************{name} Destroyed!***************</color>");
                 HP = 200;
                 Explode();
                 Transform shootAgent;
                 if(shootAgent = transform.parent.Find(coll.name.Substring(0,6)))
-                {
                     shootAgent.GetComponent<USV>().AddReward(1f);
-                }
 
-                StartCoroutine(DeactivateAfterDelay(0.02f));
+                gameObject.SetActive(false);
             }
         }
     }
 
-    IEnumerator DeactivateAfterDelay(float delay)
-    {
-        // delay 시간만큼 대기
-        yield return new WaitForSeconds(delay);
 
-        // gameObject를 비활성화
-        gameObject.SetActive(false);
-    }
 
     public void Explode()
     {
