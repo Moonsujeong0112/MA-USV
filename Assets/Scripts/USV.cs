@@ -106,6 +106,8 @@ public class USV : Agent
             sensor.AddObservation(target.GetComponent<Target>().HP);
         else
             sensor.AddObservation(999);
+        //USVÀÇ HP(1)
+        sensor.AddObservation(HP);
     }
 
 
