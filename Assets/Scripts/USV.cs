@@ -155,8 +155,21 @@ public class USV : Agent
         if (isAbleToAttackTarget = isAttack())
             AddReward(2f / Max_Step);
 
-        if (isCloser() && IsLocatedToSight())   //가까이가고 시야각 60도 안에 존재할 때
-            AddReward(1.5f / Max_Step);
+/*        if (isCloser() && IsLocatedToSight())   //가까이가고 시야각 60도 안에 존재할 때
+            AddReward(1.5f / Max_Step);*/
+
+        if(IsLocatedToSight())
+        {
+            AddReward(0.5f / Max_Step);
+
+            if (isCloser())
+                AddReward(1f / Max_Step);
+        }
+
+        else
+        {
+            AddReward(-0.5f / Max_Step);
+        }
 
         //보상
         AddReward(-1f / Max_Step);   //페널티 1) 메 스텝
