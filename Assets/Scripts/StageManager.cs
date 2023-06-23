@@ -197,7 +197,6 @@ public class StageManager : MonoBehaviour
             {
                 Agents[i].gameObject.SetActive(false);
                 Agents[i].gameObject.SetActive(true);
-                //Debug.Log("비활성화 후 활성화 됨 : "+ Agents[i].name);
                 if (Agents[i].bullet) Destroy(Agents[i].bullet);
             }
             Agents[i].HP = agent_hp;
@@ -249,6 +248,24 @@ public class StageManager : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// 에피소드가 종료된 후 남아 있는 미사일을 삭제하는 함수
+    /// </summary>
+    private void ClearObject()
+    {
+        foreach (USV Agent in Agents)
+        {
+            if (Agent.bullet)
+                Destroy(Agent.bullet);
+        }
+
+        foreach (Target target in Targets)
+        {
+            if (target.bullet)
+                Destroy(target.bullet);
+        }
+    }
+
     private void FixedUpdate()
     {
         // 아군 전멸 (게임 패배)
@@ -260,6 +277,7 @@ public class StageManager : MonoBehaviour
                 {
                     Debug.Log($"<color=red>***************Agent Lose!***************</color>");
                     AgentGroup.EndGroupEpisode();
+                    ClearObject();
                     EpisodeBegin();
                     break;
                 }
@@ -276,9 +294,8 @@ public class StageManager : MonoBehaviour
                 {
                     Debug.Log($"<color=blue>***************Agent Win!***************</color>");
                     AgentGroup.AddGroupReward(5f + 5f * (AgentGroup.GetRegisteredAgents().Count - 1)); // 그룹에게 5 + 5 * 생존 에이전트 수 부여
-                    //AgentGroup.AddGroupReward(5f); // 그룹에게 5 + 5 * 생존 에이전트 수 부여
                     AgentGroup.EndGroupEpisode();
-
+                    ClearObject();
                     EpisodeBegin();
                     break;
                 }
@@ -294,11 +311,15 @@ public class StageManager : MonoBehaviour
             if (step_ >= MaxStep_)
             {
                 Debug.Log($"<color=orange>***************End with Max Step***************</color>");
-                //AgentGroup.AddGroupReward(-5f + -5f * (AgentGroup.GetRegisteredAgents().Count - 1)); // 그룹에게 5 + 5 * 생존 에이전트 수 부여
                 AgentGroup.EndGroupEpisode();
+                ClearObject();
                 EpisodeBegin();
                 break;
             }
         }
     }
+
+
 }
+
+
