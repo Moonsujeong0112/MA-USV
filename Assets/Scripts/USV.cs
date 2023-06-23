@@ -20,9 +20,11 @@ public class USV : Agent
 
     // 에이전트 레이더 관측값
     bool isAbleToAttackTarget;
-    public bool isAbleToAttackUSV { get; set; }
     float targetDistance;
     Vector3 targetPositionVector;
+
+    bool IsSight;
+    bool IsCloser;
 
 
     // 미사일
@@ -101,6 +103,13 @@ public class USV : Agent
         sensor.AddObservation(targetPositionVector.z);
         //Target이 USV의 발사 ray에 닿았는지(1)
         sensor.AddObservation(isAbleToAttackTarget);
+        //Target의 HP(1)
+        if (target)
+            sensor.AddObservation(target.GetComponent<Target>().HP);
+        else
+            sensor.AddObservation(999);
+        //USV의 HP(1)
+        sensor.AddObservation(HP);
     }
 
 
@@ -145,11 +154,21 @@ public class USV : Agent
         //관찰값
         targetDistance = TargetObservationDistance();
         targetPositionVector = TargetObservationVector();
-        if (isAbleToAttackTarget = isAttack())
-            AddReward(2f / Max_Step);
+        isAbleToAttackTarget = isAttack();
+        
+        IsSight = IsLocatedToSight();
+        IsCloser = isCloser();
 
-        if (isCloser() && IsLocatedToSight())   //가까이가고 시야각 60도 안에 존재할 때
-            AddReward(1.5f / Max_Step);
+        if (isAbleToAttackTarget && IsSight && IsCloser)
+            AddReward(4f / Max_Step);
+        if (isAbleToAttackTarget && IsSight && !IsCloser)
+            AddReward(3f / Max_Step);
+        if ((isAbleToAttackTarget && !IsSight && IsCloser) || (!isAbleToAttackTarget && IsSight && IsCloser) || (isAbleToAttackTarget && !IsSight && !IsCloser))
+            AddReward(2f / Max_Step);
+        if (!isAbleToAttackTarget && IsSight && !IsCloser)
+            AddReward(1f / Max_Step);
+        if ((!isAbleToAttackTarget && !IsSight && IsCloser) || (!isAbleToAttackTarget && !IsSight && !IsCloser))
+            AddReward(0.0f);
 
         //보상
         AddReward(-1f / Max_Step);   //페널티 1) 메 스텝
