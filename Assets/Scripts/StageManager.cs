@@ -229,9 +229,11 @@ public class StageManager : MonoBehaviour
     {
         for (int i = 0; i < Targets.Count; i++)
         {
-            Vector3 pos = new Vector3(-200 + 200*i, 1f,  0f);
+            //Vector3 pos = new Vector3(-200 + 200*i, 1f,  0f);
+            Vector3 pos = new Vector3(800f, 1f, 200 * i);
 
-            Quaternion rot = Quaternion.Euler(0, 90, 0);
+            //Quaternion rot = Quaternion.Euler(0, 90, 0);
+            Quaternion rot = Quaternion.Euler(0, 0, 0);
             Targets[i].transform.localPosition = pos;
             Targets[i].transform.rotation = rot;
         }

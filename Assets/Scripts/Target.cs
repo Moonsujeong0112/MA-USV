@@ -100,10 +100,15 @@ public class Target : MonoBehaviour
 
         transform.localPosition += transform.forward *Time.deltaTime * speed;
 
-        if (transform.localPosition.x <= way1)
+/*        if (transform.localPosition.x <= way1)
             transform.localRotation = Quaternion.Euler(0, 90, 0);
         if (transform.localPosition.x >= way2)
-            transform.localRotation = Quaternion.Euler(0, 270, 0);
+            transform.localRotation = Quaternion.Euler(0, 270, 0);*/
+
+        if (transform.localPosition.z <= way1)
+            transform.localRotation = Quaternion.Euler(0, 0, 0);
+        if (transform.localPosition.z >= way2)
+            transform.localRotation = Quaternion.Euler(0, 180, 0);
 
         distanceToAgent = USVObservation();
         Attack();
