@@ -42,7 +42,6 @@ public class StageManager : MonoBehaviour
 
     public bool USVAttack { get; set; }
     public bool TargetAttacked { get; set; }
-
     void Start()
     {
         m_ResetParams = Academy.Instance.EnvironmentParameters;
@@ -201,7 +200,7 @@ public class StageManager : MonoBehaviour
             }
             Agents[i].HP = agent_hp;
             Agents[i].bulletCnt = agent_bullet_cnt;
-            Agents[i].cooltime = agent_cooltime * 50;   //1프레임당 50 step
+            Agents[i].cooltime = agent_cooltime * 50;   // 1프레임당 50 step
             Agents[i].cool = 0;
             AgentGroup.RegisterAgent(Agents[i]);
         }
@@ -216,7 +215,7 @@ public class StageManager : MonoBehaviour
 
             Targets[i].HP = target_hp;
             Targets[i].bulletCnt = target_bullet_cnt;
-            Targets[i].cooltime = target_cooltime * 50; //1프레임당 50 step
+            Targets[i].cooltime = target_cooltime * 50; // 1프레임당 50 step
             Targets[i].cool = 0;
             Targets[i].waypoint = 0;
         }
@@ -227,25 +226,47 @@ public class StageManager : MonoBehaviour
     /// </summary>
     private void ResetPostion()
     {
-        for (int i = 0; i < Targets.Count; i++)
+        int randomRot = Random.Range(0, 360);
+        Targets[0].transform.localPosition = new (0, 0, 0);
+        Quaternion direction = Quaternion.Euler(0, randomRot, 0);
+        Targets[0].transform.rotation = direction;
+        
+        for (int i = 1; i < Targets.Count; i++)
         {
-            Vector3 pos = new Vector3(-200 + 200*i, 1f,  0f);
+            Targets[i].transform.localPosition = Targets[i - 1].transform.localPosition+ Targets[i - 1].transform.forward * 200;
+            Targets[i].transform.rotation = direction;
+        }
 
-            Quaternion rot = Quaternion.Euler(0, 90, 0);
+        for (int i = 0; i < Agents.Count; i++)
+        {
+            Agents[i].transform.localPosition = Targets[0].transform.localPosition - Targets[0].transform.forward * 600 + Targets[0].transform.right * (200 - 200 * i);
+            Agents[i].transform.rotation = direction;
+        }
+
+
+/*        for (int i = 0; i < Targets.Count; i++)
+        {
+
+            //Vector3 pos = new Vector3(-200 + 200*i, 1f,  0f);
+            Vector3 pos = new (800f, 1f, 200 * i);
+
+            //Quaternion rot = Quaternion.Euler(0, 90, 0);
+            Quaternion rot = Quaternion.Euler(0, 0, 0);
             Targets[i].transform.localPosition = pos;
             Targets[i].transform.rotation = rot;
         }
 
         for (int i = 0; i < Agents.Count; i++)
         {
-            Vector3 pos = new Vector3(-800, 1f, 200.0f - 200f * i);
+            Vector3 pos = new (-800, 1f, 200.0f - 200f * i);
             Quaternion rot = Quaternion.Euler(0, 90, 0);
 
             Agents[i].transform.localPosition = pos;
 
             Agents[i].transform.rotation = rot;
             //Agents[i].transform.LookAt(Targets[i].transform);
-        }
+        }*/
+
     }
 
     /// <summary>
@@ -321,5 +342,3 @@ public class StageManager : MonoBehaviour
 
 
 }
-
-

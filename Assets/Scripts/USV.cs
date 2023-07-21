@@ -163,7 +163,7 @@ public class USV : Agent
             AddReward(4f / Max_Step);
         if (isAbleToAttackTarget && IsSight && !IsCloser)
             AddReward(3f / Max_Step);
-        if ((isAbleToAttackTarget && !IsSight && IsCloser) || (!isAbleToAttackTarget && IsSight && IsCloser) || (isAbleToAttackTarget && !IsSight && !IsCloser))
+        if ((isAbleToAttackTarget && !IsSight && IsCloser) || (isAbleToAttackTarget && !IsSight && !IsCloser) || (!isAbleToAttackTarget && IsSight && IsCloser))
             AddReward(2f / Max_Step);
         if (!isAbleToAttackTarget && IsSight && !IsCloser)
             AddReward(1f / Max_Step);

@@ -1061,6 +1061,15 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   speed: 15
+  random_pos: 0
+  wayT: 0
+  random_turn: 0
+  waypoint: 0
+  current_point: {x: 0, y: 0, z: 0}
+  next_point: {x: 0, y: 0, z: 0}
+  point_check: 0
+  gothrough: 0
+  go_num: 0
   bulletPrefab: {fileID: 4014584743731169974, guid: 6d6a2c75bd6e3314984ef17bca5d447f, type: 3}
   bulletCnt: 20
   bulletSpeed: 20

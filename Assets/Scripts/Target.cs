@@ -8,6 +8,13 @@ public class Target : MonoBehaviour
 {
     public float HP { get; set; }
     public float speed;
+    public int random_pos;
+    
+    //0711
+
+    public int wayT = 0; //for path T form
+    public int random_turn; //for turn pos
+    
 
     Vector3 destination1 = new Vector3(-800, 1.0f, 800);
     Vector3 destination2 = new Vector3(-800, 1.0f, -150);
@@ -20,12 +27,11 @@ public class Target : MonoBehaviour
     Vector3 destination9 = new Vector3(-800, 1.0f, 600);
     Vector3 destination10 = new Vector3(800, 1.0f, 600);
 
-    //int way1 = -500;
     int way1 = -810;
-    //int way2 = 500;
     int way2 = 810;
 
-    public int waypoint { get; set; }
+    //ranway
+    public int waypoint = 0;
 
     // 총알
     public int cooltime { get; set; }
@@ -60,50 +66,17 @@ public class Target : MonoBehaviour
 
     void FixedUpdate()
     {
-        /*        // target move1
-                if (waypoint == 0)
-                {
-                    transform.localPosition = Vector3.MoveTowards(transform.localPosition, destination1, Time.deltaTime * speed);
-                    if (transform.localPosition.x == destination1.x)
-                    {
-                        transform.rotation = Quaternion.Euler(0, 180, 0);
-                        waypoint = 1;
-                    }
-                }
-                else if (waypoint == 1)
-                {
-                    transform.localPosition = Vector3.MoveTowards(transform.localPosition, destination9, Time.deltaTime * speed);
-                    if (transform.localPosition == destination9)
-                    {
-                        transform.rotation = Quaternion.Euler(0, 90, 0);
-                        waypoint = 9;
-                    }
-                }
-                else if (waypoint == 9)
-                {
-                    transform.localPosition = Vector3.MoveTowards(transform.localPosition, destination10, Time.deltaTime * speed);
-                    if (transform.localPosition == destination10)
-                    {
-                        transform.rotation = Quaternion.Euler(0, 0, 0);
-                        waypoint = 10;
-                    }
-                }
-                else
-                {
-                    transform.localPosition = Vector3.MoveTowards(transform.localPosition, destination8, Time.deltaTime * speed);
-                    if (transform.localPosition == destination8)
-                    {
-                        transform.rotation = Quaternion.Euler(0, 270, 0);
-                        waypoint = 0;
-                    }
-                }*/
-
         transform.localPosition += transform.forward *Time.deltaTime * speed;
 
-        if (transform.localPosition.x <= way1)
-            transform.localRotation = Quaternion.Euler(0, 90, 0);
-        if (transform.localPosition.x >= way2)
-            transform.localRotation = Quaternion.Euler(0, 270, 0);
+        if (transform.localPosition.x <= way1 || transform.localPosition.x >= way2 || transform.localPosition.z <= way1 || transform.localPosition.z >= way2)
+        {
+            Quaternion currentRotation = transform.localRotation;
+            float currentYaw = currentRotation.eulerAngles.y;
+
+            // 기존 회전 방향의 반대 방향으로 회전
+            Quaternion reverseRotation = Quaternion.Euler(0, currentYaw + 180f, 0);
+            transform.rotation = reverseRotation;
+        }
 
         distanceToAgent = USVObservation();
         Attack();
@@ -192,8 +165,6 @@ public class Target : MonoBehaviour
             }
         }
     }
-
-
 
     public void Explode()
     {
