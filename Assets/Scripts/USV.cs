@@ -21,6 +21,7 @@ public class USV : Agent
     // 에이전트 레이더 관측값
     bool isAbleToAttackTarget;
     float targetDistance;
+    float usvDistance;
     Vector3 targetPositionVector;
 
     bool IsSight;
@@ -76,6 +77,7 @@ public class USV : Agent
         attack_target = null;
         target_queue = new Queue<KeyValuePair<string, float>>();
         targetDistance = TargetObservationDistance();
+        usvDistance = USVObservationDistance();
         targetPositionVector = TargetObservationVector();
         isAbleToAttackTarget = isAttack();
         Max_Step = transform.parent.GetComponent<StageManager>().MaxStep_;
@@ -98,6 +100,8 @@ public class USV : Agent
 
         //360도 ray에서 target과의 거리(1)
         sensor.AddObservation(targetDistance);
+        //360도 ray에서 usv과의 거리(1)
+        sensor.AddObservation(usvDistance);
         //Target의 상대 위치(2)
         sensor.AddObservation(targetPositionVector.x);
         sensor.AddObservation(targetPositionVector.z);
@@ -153,6 +157,7 @@ public class USV : Agent
 
         //관찰값
         targetDistance = TargetObservationDistance();
+        usvDistance = USVObservationDistance();
         targetPositionVector = TargetObservationVector();
         isAbleToAttackTarget = isAttack();
         
@@ -169,6 +174,9 @@ public class USV : Agent
             AddReward(1f / Max_Step);
         if ((!isAbleToAttackTarget && !IsSight && IsCloser) || (!isAbleToAttackTarget && !IsSight && !IsCloser))
             AddReward(0.0f);
+
+        if (usvDistance < 100)
+            AddReward(-1f / Max_Step);
 
         //보상
         AddReward(-1f / Max_Step);   //페널티 1) 메 스텝
@@ -298,6 +306,39 @@ public class USV : Agent
         {
             KeyValuePair<string, float> pair = new KeyValuePair<string, float>(target.name, minDistance);   //<이름, 최단거리>의 pair로 저장하여 isCloser 함수에서 사용
             target_queue.Enqueue(pair);
+        }
+
+        return minDistance;
+    }
+
+    /// <summary>
+    /// 아군 관측 후 가장 가까운 타겟간의 거리 return
+    /// </summary>
+    public float USVObservationDistance()
+    {
+        float distance;
+        float minDistance = obs_rader_size;
+
+        for (int i = 0; i < numRays; i++)
+        {
+            float angle = i * 2 * Mathf.PI / numRays;
+            Vector3 direction = new Vector3(Mathf.Sin(angle), 0, Mathf.Cos(angle));
+            Ray ray = new Ray(transform.position, direction * obs_rader_size);
+
+            RaycastHit hit;
+
+            //Debug.DrawRay(transform.position, direction * obs_rader_size, Color.red);
+
+            if (Physics.Raycast(ray, out hit, obs_rader_size))
+            {
+                if (hit.collider.gameObject.CompareTag("Agent"))
+                {
+                    distance = Vector3.Distance(hit.collider.transform.position, transform.position);
+
+                    if (distance < minDistance)
+                        minDistance = distance;
+                }
+            }
         }
 
         return minDistance;
