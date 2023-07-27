@@ -10,11 +10,6 @@ public class Target : MonoBehaviour
     public float speed;
     public int random_pos;
     
-    //0711
-
-    public int wayT = 0; //for path T form
-    public int random_turn; //for turn pos
-    
 
     Vector3 destination1 = new Vector3(-800, 1.0f, 800);
     Vector3 destination2 = new Vector3(-800, 1.0f, -150);
@@ -66,17 +61,18 @@ public class Target : MonoBehaviour
 
     void FixedUpdate()
     {
-        transform.localPosition += transform.forward *Time.deltaTime * speed;
-
         if (transform.localPosition.x <= way1 || transform.localPosition.x >= way2 || transform.localPosition.z <= way1 || transform.localPosition.z >= way2)
         {
             Quaternion currentRotation = transform.localRotation;
             float currentYaw = currentRotation.eulerAngles.y;
 
             // 기존 회전 방향의 반대 방향으로 회전
-            Quaternion reverseRotation = Quaternion.Euler(0, currentYaw + 180f, 0);
+            Quaternion reverseRotation = Quaternion.Euler(0, currentYaw + 120f, 0);
             transform.rotation = reverseRotation;
         }
+
+        transform.localPosition += transform.forward * Time.deltaTime * speed;
+
 
         distanceToAgent = USVObservation();
         Attack();

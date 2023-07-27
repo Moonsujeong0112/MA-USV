@@ -18,8 +18,12 @@ public class USV : Agent
     RayPerceptionOutput rayperceive;
     float rayperceptionsensorLength;
 
+    
+
     // 에이전트 레이더 관측값
     bool isAbleToAttackTarget;
+
+    Dictionary<string, float> distanceList = new Dictionary<string, float>();
     float targetDistance;
     float usvDistance;
     Vector3 targetPositionVector;
@@ -29,7 +33,6 @@ public class USV : Agent
 
 
     // 미사일
-    
     public GameObject bullet { get; set; }
     public GameObject bulletPrefab;
     public int bulletCnt { get; set; }
@@ -67,7 +70,7 @@ public class USV : Agent
 
         MaxStep = 0;
     }
-
+    
     /// <summary>
     /// 매 에피소드 시작 시 호출 함수
     /// </summary>
@@ -76,8 +79,8 @@ public class USV : Agent
         target = null;
         attack_target = null;
         target_queue = new Queue<KeyValuePair<string, float>>();
-        targetDistance = TargetObservationDistance();
-        usvDistance = USVObservationDistance();
+        distanceList.Add("Agent", obs_rader_size);
+        distanceList.Add("Target", obs_rader_size);
         targetPositionVector = TargetObservationVector();
         isAbleToAttackTarget = isAttack();
         Max_Step = transform.parent.GetComponent<StageManager>().MaxStep_;
@@ -85,17 +88,6 @@ public class USV : Agent
 
     public override void CollectObservations(VectorSensor sensor)
     {
-        /*        if (target)
-                    Debug.Log("target : " + target.gameObject.name);
-                else
-                    Debug.Log("target이 측정되지 않음!!");
-                Debug.Log(
-                     "\ntarget과의 거리 : " + targetDistance +
-                     "\ntarget의 상대 위치 : " + targetPositionVector +
-                     "\nTarget이 닿았냐? : " + isAbleToAttackTarget
-                     );*/
-
-
         //거리 관측 -> 가장 가까운 타겟 지정 -> 가장 가까운 타겟 상대 위치 파악 -> 발사 ray에 닿으면 공격
 
         //360도 ray에서 target과의 거리(1)
@@ -156,8 +148,10 @@ public class USV : Agent
         MoveAgent(actions.DiscreteActions);
 
         //관찰값
-        targetDistance = TargetObservationDistance();
-        usvDistance = USVObservationDistance();
+        ObserveDistance();
+        targetDistance = distanceList["Target"];
+        usvDistance = distanceList["Agent"];
+
         targetPositionVector = TargetObservationVector();
         isAbleToAttackTarget = isAttack();
         
@@ -267,18 +261,19 @@ public class USV : Agent
     }
 
     /// <summary>
-    /// 적 관측 후 가장 가까운 타겟간의 거리 return
+    /// 거리 관측 함수 (타겟, 에이전트 등등 추가)
     /// </summary>
-    public float TargetObservationDistance()
+    public void ObserveDistance()
     {
         float distance;
-        float minDistance = obs_rader_size;
+        float minAgentDistance = obs_rader_size;
+        float minTargetDistance = obs_rader_size;
 
         for (int i = 0; i < numRays; i++)
         {
             float angle = i * 2 * Mathf.PI / numRays;
-            Vector3 direction = new Vector3(Mathf.Sin(angle), 0, Mathf.Cos(angle));
-            Ray ray = new Ray(transform.position, direction * obs_rader_size);
+            Vector3 direction = new (Mathf.Sin(angle), 0, Mathf.Cos(angle));
+            Ray ray = new (transform.position, direction * obs_rader_size);
 
             RaycastHit hit;
 
@@ -286,62 +281,38 @@ public class USV : Agent
 
             if (Physics.Raycast(ray, out hit, obs_rader_size))
             {
-                if (hit.collider.gameObject.CompareTag("Target"))
+                if (hit.collider.gameObject.CompareTag("Agent"))    //아군 에이전트일 때
                 {
                     distance = Vector3.Distance(hit.collider.transform.position, transform.position);
 
-                    if (distance < minDistance)
+                    if (distance < minAgentDistance)
+                        minAgentDistance = distance;
+                }
+
+                if (hit.collider.gameObject.CompareTag("Target"))   //적 에이전트 일 때
+                {
+                    distance = Vector3.Distance(hit.collider.transform.position, transform.position);
+
+                    if (distance < minTargetDistance)
                     {
-                        minDistance = distance;
+                        minTargetDistance = distance;
                         target = hit.transform;
                     }
-
                 }
             }
         }
 
-        if (minDistance == obs_rader_size) target = null;
+        //타겟 부분
+        if (minTargetDistance == obs_rader_size) target = null;
 
         else
         {
-            KeyValuePair<string, float> pair = new KeyValuePair<string, float>(target.name, minDistance);   //<이름, 최단거리>의 pair로 저장하여 isCloser 함수에서 사용
+            KeyValuePair<string, float> pair = new KeyValuePair<string, float>(target.name, minTargetDistance);   //<이름, 최단거리>의 pair로 저장하여 isCloser 함수에서 사용
             target_queue.Enqueue(pair);
         }
 
-        return minDistance;
-    }
-
-    /// <summary>
-    /// 아군 관측 후 가장 가까운 타겟간의 거리 return
-    /// </summary>
-    public float USVObservationDistance()
-    {
-        float distance;
-        float minDistance = obs_rader_size;
-
-        for (int i = 0; i < numRays; i++)
-        {
-            float angle = i * 2 * Mathf.PI / numRays;
-            Vector3 direction = new Vector3(Mathf.Sin(angle), 0, Mathf.Cos(angle));
-            Ray ray = new Ray(transform.position, direction * obs_rader_size);
-
-            RaycastHit hit;
-
-            //Debug.DrawRay(transform.position, direction * obs_rader_size, Color.red);
-
-            if (Physics.Raycast(ray, out hit, obs_rader_size))
-            {
-                if (hit.collider.gameObject.CompareTag("Agent"))
-                {
-                    distance = Vector3.Distance(hit.collider.transform.position, transform.position);
-
-                    if (distance < minDistance)
-                        minDistance = distance;
-                }
-            }
-        }
-
-        return minDistance;
+        distanceList["Agent"] = minAgentDistance;
+        distanceList["Target"] = minTargetDistance;
     }
 
     /// <summary>
