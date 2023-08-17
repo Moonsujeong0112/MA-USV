@@ -1009,7 +1009,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 57c284ad1d262ef4fbf1b30c4bffb8e6, type: 2}
+  - {fileID: 10302, guid: 0000000000000000f000000000000000, type: 0}
   - {fileID: 2100000, guid: a1d9cb9c5ef5e8c4ebcaa13a34b34886, type: 2}
   - {fileID: 2100000, guid: 9855e70614dd5c64da46b54a0bfce6d7, type: 2}
   - {fileID: 2100000, guid: c2fa5c47a18e6e34e967ef3183ad0c96, type: 2}
@@ -1060,20 +1060,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 69462a079d0311b498a620361a57c006, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  speed: 15
-  random_pos: 0
-  wayT: 0
-  random_turn: 0
-  waypoint: 0
-  current_point: {x: 0, y: 0, z: 0}
-  next_point: {x: 0, y: 0, z: 0}
-  point_check: 0
-  gothrough: 0
-  go_num: 0
+  moveSpeed: 15
   bulletPrefab: {fileID: 4014584743731169974, guid: 6d6a2c75bd6e3314984ef17bca5d447f, type: 3}
   bulletCnt: 20
   bulletSpeed: 20
-  obs_rader_size: 400
+  obs_rader_size: 3000
   attack_rader_size: 200
   numRays: 400
   Agent: {fileID: 0}

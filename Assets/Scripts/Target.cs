@@ -7,28 +7,12 @@ using UnityEngine;
 public class Target : MonoBehaviour
 {
     public float HP { get; set; }
-    public float speed;
-    public int random_pos;
-    
-
-    Vector3 destination1 = new Vector3(-800, 1.0f, 800);
-    Vector3 destination2 = new Vector3(-800, 1.0f, -150);
-    Vector3 destination3 = new Vector3(-250, 1.0f, -150);
-    Vector3 destination4 = new Vector3(-250, 1.0f, 250);
-    Vector3 destination5 = new Vector3(250, 1.0f, 250);
-    Vector3 destination6 = new Vector3(250, 1.0f, -150);
-    Vector3 destination7 = new Vector3(350, 1.0f, -150);
-    Vector3 destination8 = new Vector3(800, 1.0f, 800);
-    Vector3 destination9 = new Vector3(-800, 1.0f, 600);
-    Vector3 destination10 = new Vector3(800, 1.0f, 600);
+    public float moveSpeed;
 
     int way1 = -810;
     int way2 = 810;
 
-    //ranway
-    public int waypoint = 0;
-
-    // 총알
+    // 포탄
     public int cooltime { get; set; }
     public int cool { get; set; }
     public GameObject bullet { get; set; }  //stagemanager에서 사용하기 위해서 프로퍼티 사용 (에피소드 시작 시 bullet이 존재하면 삭제하는 역할)
@@ -45,34 +29,60 @@ public class Target : MonoBehaviour
     //에이전트
     public Transform Agent;
     public Transform attack_Agent;
-
     public GameObject explosionPrefab;
-    public void Init()
-    {
-        Agent = null;
-        attack_Agent = null;
-    }
+
+    private Vector3 currentPosition;
+    private Quaternion currentRotation;
+    private bool xTouched;
+    private bool zTouched;
 
     public void OnEnable()
     {
         Agent = null;
         attack_Agent = null;
+        xTouched = false;
+        zTouched = false;
     }
 
     void FixedUpdate()
     {
-        if (transform.localPosition.x <= way1 || transform.localPosition.x >= way2 || transform.localPosition.z <= way1 || transform.localPosition.z >= way2)
-        {
-            Quaternion currentRotation = transform.localRotation;
-            float currentYaw = currentRotation.eulerAngles.y;
+        /*        if (transform.localPosition.x <= way1 || transform.localPosition.x >= way2 || transform.localPosition.z <= way1 || transform.localPosition.z >= way2)
+                {
+                    Quaternion currentRotation = transform.localRotation;
+                    float currentYaw = currentRotation.eulerAngles.y;
 
-            // 기존 회전 방향의 반대 방향으로 회전
-            Quaternion reverseRotation = Quaternion.Euler(0, currentYaw + 120f, 0);
-            transform.rotation = reverseRotation;
+                    // 기존 회전 방향의 반대 방향으로 회전
+                    Quaternion reverseRotation = Quaternion.Euler(0, currentYaw + 170f, 0);
+                    transform.rotation = reverseRotation;
+                }*/
+        currentPosition = transform.localPosition;
+        currentRotation = transform.localRotation;
+
+        if ((xTouched || zTouched) && (currentPosition.x > 850 || currentPosition.x < -850 || currentPosition.z > 850 || currentPosition.z < -850))
+            transform.localRotation = Quaternion.Euler(0, currentRotation.eulerAngles.y + 180f, 0);
+
+        if ((currentPosition.z > 810 || currentPosition.z < -810) && !xTouched && !zTouched)
+        {
+            zTouched = true;
+            if (currentPosition.x > 0)
+                transform.localRotation = Quaternion.Euler(0, 90, 0);
+            else
+                transform.localRotation = Quaternion.Euler(0, 270, 0);
         }
 
-        transform.localPosition += transform.forward * Time.deltaTime * speed;
+        if ((currentPosition.x > 810 || currentPosition.x < -810) && !xTouched && !zTouched)
+        {
+            xTouched = true;
+            if (currentPosition.z > 0)
+                transform.localRotation = Quaternion.Euler(0, 0, 0);
+            else
+                transform.localRotation = Quaternion.Euler(0, 180, 0);
+        }
 
+
+
+
+        transform.localPosition += transform.forward * Time.deltaTime * moveSpeed;
 
         distanceToAgent = USVObservation();
         Attack();
@@ -86,8 +96,8 @@ public class Target : MonoBehaviour
         for(int i = 0; i < numRays; i++)
         {
             float angle = i * 2* Mathf.PI / numRays;
-            Vector3 direction = new Vector3(Mathf.Sin(angle), 0, Mathf.Cos(angle));
-            Ray ray = new Ray(transform.position, direction * obs_rader_size);
+            Vector3 direction = new (Mathf.Sin(angle), 0, Mathf.Cos(angle));
+            Ray ray = new (transform.position, direction * obs_rader_size);
 
             RaycastHit hit;
 
@@ -154,7 +164,7 @@ public class Target : MonoBehaviour
                 HP = 200;
                 Explode();
                 Transform shootAgent;
-                if(shootAgent = transform.parent.Find(coll.name.Substring(0,6)))
+                if (shootAgent = transform.parent.Find(coll.name.Substring(0, 6)))
                     shootAgent.GetComponent<USV>().AddReward(1f);
 
                 gameObject.SetActive(false);

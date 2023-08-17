@@ -13,8 +13,6 @@ public class StageManager : MonoBehaviour
     [SerializeField]
     private List<Target> Targets;
 
-    EnvironmentParameters m_ResetParams;
-
     int Episode_ = 0;
     public int step_ { get;set; }
     public int MaxStep_;
@@ -44,8 +42,6 @@ public class StageManager : MonoBehaviour
     public bool TargetAttacked { get; set; }
     void Start()
     {
-        m_ResetParams = Academy.Instance.EnvironmentParameters;
-
         CreateAgents();
         CreateTargets();
         EpisodeBegin();
@@ -167,7 +163,6 @@ public class StageManager : MonoBehaviour
 
             if (null != targetIns)
             {
-                targetIns.Init();
                 Targets.Add(targetIns);
             }
         }
@@ -180,9 +175,32 @@ public class StageManager : MonoBehaviour
     {
         Episode_++;
         step_ = 0;
-        ResetPostion();
+        ResetPostion(400);
         ResetEnv();
         //SetStageObject();
+    }
+
+    /// <summary>
+    /// Agent와 Target의 위치를 Reset하는 함수
+    /// </summary>
+    private void ResetPostion(float farToTarget)
+    {
+        int randomRot = Random.Range(0, 360);
+        Targets[0].transform.localPosition = new(0, 0, 0);
+        Quaternion direction = Quaternion.Euler(0, randomRot, 0);
+        Targets[0].transform.rotation = direction;
+
+        for (int i = 1; i < Targets.Count; i++)
+        {
+            Targets[i].transform.localPosition = Targets[i - 1].transform.localPosition + Targets[i - 1].transform.forward * 200;
+            Targets[i].transform.rotation = direction;
+        }
+
+        for (int i = 0; i < Agents.Count; i++)
+        {
+            Agents[i].transform.localPosition = Targets[0].transform.localPosition - Targets[0].transform.forward * farToTarget + Targets[0].transform.right * (200 - 200 * i);
+            Agents[i].transform.rotation = direction;
+        }
     }
 
     /// <summary>
@@ -217,57 +235,10 @@ public class StageManager : MonoBehaviour
             Targets[i].bulletCnt = target_bullet_cnt;
             Targets[i].cooltime = target_cooltime * 50; // 1프레임당 50 step
             Targets[i].cool = 0;
-            Targets[i].waypoint = 0;
         }
     }
 
-    /// <summary>
-    /// Agent와 Target의 위치를 Reset하는 함수
-    /// </summary>
-    private void ResetPostion()
-    {
-        int randomRot = Random.Range(0, 360);
-        Targets[0].transform.localPosition = new (0, 0, 0);
-        Quaternion direction = Quaternion.Euler(0, randomRot, 0);
-        Targets[0].transform.rotation = direction;
-        
-        for (int i = 1; i < Targets.Count; i++)
-        {
-            Targets[i].transform.localPosition = Targets[i - 1].transform.localPosition+ Targets[i - 1].transform.forward * 200;
-            Targets[i].transform.rotation = direction;
-        }
 
-        for (int i = 0; i < Agents.Count; i++)
-        {
-            Agents[i].transform.localPosition = Targets[0].transform.localPosition - Targets[0].transform.forward * 600 + Targets[0].transform.right * (200 - 200 * i);
-            Agents[i].transform.rotation = direction;
-        }
-
-
-/*        for (int i = 0; i < Targets.Count; i++)
-        {
-
-            //Vector3 pos = new Vector3(-200 + 200*i, 1f,  0f);
-            Vector3 pos = new (800f, 1f, 200 * i);
-
-            //Quaternion rot = Quaternion.Euler(0, 90, 0);
-            Quaternion rot = Quaternion.Euler(0, 0, 0);
-            Targets[i].transform.localPosition = pos;
-            Targets[i].transform.rotation = rot;
-        }
-
-        for (int i = 0; i < Agents.Count; i++)
-        {
-            Vector3 pos = new (-800, 1f, 200.0f - 200f * i);
-            Quaternion rot = Quaternion.Euler(0, 90, 0);
-
-            Agents[i].transform.localPosition = pos;
-
-            Agents[i].transform.rotation = rot;
-            //Agents[i].transform.LookAt(Targets[i].transform);
-        }*/
-
-    }
 
     /// <summary>
     /// 에피소드가 종료된 후 남아 있는 미사일을 삭제하는 함수
@@ -339,6 +310,4 @@ public class StageManager : MonoBehaviour
             }
         }
     }
-
-
 }

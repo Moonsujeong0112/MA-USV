@@ -8,41 +8,31 @@ using System.Collections.Generic;
 public class USV : Agent
 {
     // 에이전트 Inspector
-    public float HP { get; set; }
+    public int HP { get; set; }
     public float moveSpeed;
     public float turnSpeed;
 
-    // 에이전트 레이더
-    RayPerceptionSensorComponent3D raycomponent;
-    RayPerceptionInput rayinput;
-    RayPerceptionOutput rayperceive;
-    float rayperceptionsensorLength;
-
-    
-
-    // 에이전트 레이더 관측값
+    // boolean 값
+    bool isSight;
+    bool isCloser;
     bool isAbleToAttackTarget;
 
-    Dictionary<string, float> distanceList = new Dictionary<string, float>();
-    float targetDistance;
-    float usvDistance;
-    Vector3 targetPositionVector;
-
-    bool IsSight;
-    bool IsCloser;
+    //거리, 위치 값
+    Dictionary<string, float> DistanceList = new Dictionary<string, float>();
+    Vector3 TargetPositionVector;
 
 
-    // 미사일
+    // 포탄
     public GameObject bullet { get; set; }
     public GameObject bulletPrefab;
+    public GameObject explosionPrefab;
+    public float bulletSpeed;
     public int bulletCnt { get; set; }
     public int cooltime { get; set; }
     public int cool { get; set; }
-    public float bulletSpeed;
-    public GameObject explosionPrefab;
 
-    //미사일 거리
-    public float rader_size;
+    //레이저 거리
+    public float attack_rader_size;
     public float obs_rader_size;
     public int numRays;
 
@@ -64,10 +54,6 @@ public class USV : Agent
     {
         base.Initialize();
         // 초기화
-        raycomponent = this.GetComponent<RayPerceptionSensorComponent3D>();
-        rayinput = raycomponent.GetRayPerceptionInput();
-        rayperceptionsensorLength = rayinput.RayLength * transform.localScale.x;    //비율에 따른 rayperceptionsensor3D의 길이 상수화
-
         MaxStep = 0;
     }
     
@@ -79,10 +65,12 @@ public class USV : Agent
         target = null;
         attack_target = null;
         target_queue = new Queue<KeyValuePair<string, float>>();
-        distanceList.Add("Agent", obs_rader_size);
-        distanceList.Add("Target", obs_rader_size);
-        targetPositionVector = TargetObservationVector();
-        isAbleToAttackTarget = isAttack();
+        if (!DistanceList.ContainsKey("Agent"))
+            DistanceList.Add("Agent", obs_rader_size);
+        if (!DistanceList.ContainsKey("Target"))
+            DistanceList.Add("Target", obs_rader_size);
+        TargetPositionVector = TargetObservationVector();
+        isAbleToAttackTarget = IsAttack();
         Max_Step = transform.parent.GetComponent<StageManager>().MaxStep_;
     }
 
@@ -91,12 +79,12 @@ public class USV : Agent
         //거리 관측 -> 가장 가까운 타겟 지정 -> 가장 가까운 타겟 상대 위치 파악 -> 발사 ray에 닿으면 공격
 
         //360도 ray에서 target과의 거리(1)
-        sensor.AddObservation(targetDistance);
+        sensor.AddObservation(DistanceList["Target"]);
         //360도 ray에서 usv과의 거리(1)
-        sensor.AddObservation(usvDistance);
+        sensor.AddObservation(DistanceList["Agent"]);
         //Target의 상대 위치(2)
-        sensor.AddObservation(targetPositionVector.x);
-        sensor.AddObservation(targetPositionVector.z);
+        sensor.AddObservation(TargetPositionVector.x);
+        sensor.AddObservation(TargetPositionVector.z);
         //Target이 USV의 발사 ray에 닿았는지(1)
         sensor.AddObservation(isAbleToAttackTarget);
         //Target의 HP(1)
@@ -149,27 +137,25 @@ public class USV : Agent
 
         //관찰값
         ObserveDistance();
-        targetDistance = distanceList["Target"];
-        usvDistance = distanceList["Agent"];
 
-        targetPositionVector = TargetObservationVector();
-        isAbleToAttackTarget = isAttack();
+        TargetPositionVector = TargetObservationVector();
+        isAbleToAttackTarget = IsAttack();
         
-        IsSight = IsLocatedToSight();
-        IsCloser = isCloser();
+        isSight = IsLocatedToSight();
+        isCloser = IsCloser();
 
-        if (isAbleToAttackTarget && IsSight && IsCloser)
+        if (isAbleToAttackTarget && isSight && isCloser)
             AddReward(4f / Max_Step);
-        if (isAbleToAttackTarget && IsSight && !IsCloser)
+        if (isAbleToAttackTarget && isSight && !isCloser)
             AddReward(3f / Max_Step);
-        if ((isAbleToAttackTarget && !IsSight && IsCloser) || (isAbleToAttackTarget && !IsSight && !IsCloser) || (!isAbleToAttackTarget && IsSight && IsCloser))
+        if ((isAbleToAttackTarget && !isSight && isCloser) || (isAbleToAttackTarget && !isSight && !isCloser) || (!isAbleToAttackTarget && isSight && isCloser))
             AddReward(2f / Max_Step);
-        if (!isAbleToAttackTarget && IsSight && !IsCloser)
+        if (!isAbleToAttackTarget && isSight && !isCloser)
             AddReward(1f / Max_Step);
-        if ((!isAbleToAttackTarget && !IsSight && IsCloser) || (!isAbleToAttackTarget && !IsSight && !IsCloser))
+        if ((!isAbleToAttackTarget && !isSight && isCloser) || (!isAbleToAttackTarget && !isSight && !isCloser))
             AddReward(0.0f);
 
-        if (usvDistance < 100)
+        if (DistanceList["Agent"] < 50)
             AddReward(-1f / Max_Step);
 
         //보상
@@ -197,6 +183,29 @@ public class USV : Agent
         if (Input.GetKey(KeyCode.S)) action[0] = 2;
         if (Input.GetKey(KeyCode.A)) action[1] = 2;
         if (Input.GetKey(KeyCode.D)) action[1] = 1;
+    }
+
+
+    /// <summary>
+    /// 포탄 맞을 시
+    /// </summary>
+    /// <param name="coll"></param>
+    void OnTriggerEnter(Collider coll)
+    {
+        if (coll.CompareTag("Target_Bullet"))
+        {
+            //Debug.Log($"<color=orange>***************{name} before attack HP: {HP}***************</color>");
+            HP -= 80;
+            //AddReward(-5f);
+            //Debug.Log($"<color=orange>***************{name} after attack HP: {HP}***************</color>");
+            if (HP <= 0)
+            {
+                Explode();
+                //AddReward(-5f);
+                Destroy(coll.gameObject);
+                gameObject.SetActive(false);
+            }
+        }
     }
 
     /// <summary>
@@ -235,28 +244,6 @@ public class USV : Agent
             Explode();
             AddReward(-1f);
             gameObject.SetActive(false);        //자신 USV false
-        }
-    }
-
-    /// <summary>
-    /// 포탄 맞을 시
-    /// </summary>
-    /// <param name="coll"></param>
-    void OnTriggerEnter(Collider coll)
-    {
-        if (coll.CompareTag("Target_Bullet"))
-        {
-            //Debug.Log($"<color=orange>***************{name} before attack HP: {HP}***************</color>");
-            HP -= 80;
-            //AddReward(-5f);
-            //Debug.Log($"<color=orange>***************{name} after attack HP: {HP}***************</color>");
-            if (HP <= 0)
-            {
-                Explode();
-                //AddReward(-5f);
-                Destroy(coll.gameObject);
-                gameObject.SetActive(false);
-            }
         }
     }
 
@@ -311,8 +298,8 @@ public class USV : Agent
             target_queue.Enqueue(pair);
         }
 
-        distanceList["Agent"] = minAgentDistance;
-        distanceList["Target"] = minTargetDistance;
+        DistanceList["Agent"] = minAgentDistance;
+        DistanceList["Target"] = minTargetDistance;
     }
 
     /// <summary>
@@ -340,7 +327,7 @@ public class USV : Agent
     /// <이름, 최단거리> pair를 비교하여 관측한 가장 가까운 적이랑 점점 가까워지면 true를 return하는 함수
     /// </summary>
     /// <returns></returns>
-    public bool isCloser()
+    public bool IsCloser()
     {
         if (target_queue.Count > 1)
         {
@@ -367,9 +354,9 @@ public class USV : Agent
     /// <summary>
     /// 미사일 발사
     /// </summary>
-    bool isAttack()
+    bool IsAttack()
     {
-        if (attack_target || (target && (targetDistance < rader_size)))   //공격 대상이 지정 되었거나 관측된 타겟이 존재하고 타겟이 공격 범위 안에 있을 때
+        if (attack_target || (target && (DistanceList["Target"] < attack_rader_size)))   //공격 대상이 지정 되었거나 관측된 타겟이 존재하고 타겟이 공격 범위 안에 있을 때
         {
             if ((bulletCnt > 0) && cool == 0)    //bullet이 남아있고 쿨타임이 끝날 때
             {
